@@ -1,7 +1,12 @@
 <?php
 
-namespace AppBundle\Tournament;
+namespace AppBundle\Entity;
 
+
+use AppBundle\Tournament\MatchResultCollection;
+use AppBundle\Tournament\TeamCollection;
+use AppBundle\Tournament\TeamsAlreadyLockedException;
+use AppBundle\Tournament\TeamSizeTooSmallException;
 
 class Division
 {

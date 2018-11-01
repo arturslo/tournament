@@ -1,6 +1,6 @@
 <?php
 
-namespace AppBundle\Tournament;
+namespace AppBundle\Entity;
 
 
 class Team

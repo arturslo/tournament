@@ -2,8 +2,8 @@
 
 namespace Tests\AppBundle\Tournament;
 
+use AppBundle\Entity\Team;
 use PHPUnit\Framework\TestCase;
-use AppBundle\Tournament\Team;
 
 class TeamTest extends TestCase
 {

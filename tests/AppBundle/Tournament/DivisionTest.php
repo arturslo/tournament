@@ -2,13 +2,13 @@
 
 namespace Tests\AppBundle\Tournament;
 
-use AppBundle\Tournament\Team;
+use AppBundle\Entity\Division;
+use AppBundle\Entity\MatchResult;
+use AppBundle\Entity\Team;
 use AppBundle\Tournament\TeamCollection;
 use PHPUnit\Framework\TestCase;
-use AppBundle\Tournament\Division;
 use ReflectionClass;
 use AppBundle\Tournament\TeamSizeTooSmallException;
-use AppBundle\Tournament\MatchResult;
 use AppBundle\Tournament\MatchResultCollection;
 
 class DivisionTest extends TestCase

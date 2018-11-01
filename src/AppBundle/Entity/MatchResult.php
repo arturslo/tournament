@@ -1,7 +1,8 @@
 <?php
 
-namespace AppBundle\Tournament;
+namespace AppBundle\Entity;
 
+use AppBundle\Entity\Team;
 
 class MatchResult
 {
