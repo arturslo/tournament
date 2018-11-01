@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+{% block title %}tournament{% endblock %}
+
+{% block body %}
+
+    <a href="{{ path('add_teams_tournament', {'id' : tournament.id}) }}">add Teams</a>
+
+    {% if tournament.teams %}
+        <table>
+            <thead>
+            <tr>
+                <th>Teams in tournament</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for team in tournament.teams %}
+                <tr>
+                    <td>{{ team.name }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+{% block title %}tournament add teams{% endblock %}
+
+{% block body %}
+    {{ form_start(form) }}
+    {{ form_row(form.teams) }}
+    <button type="submit" formnovalidate>Save</button>
+    {{ form_end(form) }}
+{% endblock %}
