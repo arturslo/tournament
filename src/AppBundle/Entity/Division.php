@@ -2,12 +2,15 @@
 
 namespace AppBundle\Entity;
 
-
-use AppBundle\Tournament\MatchResultCollection;
-use AppBundle\Tournament\TeamCollection;
 use AppBundle\Tournament\TeamsAlreadyLockedException;
 use AppBundle\Tournament\TeamSizeTooSmallException;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="divisions")
+ */
 class Division
 {
     const NAME_A = 'A';
@@ -18,41 +21,48 @@ class Division
     const SATE_FINISHED = 3;
 
     /**
-     * @var string
-     */
-    private $name;
-    /**
-     * @var int
-     */
-    private $state;
-    /**
-     * @var int
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\Column(type="integer")
      */
     private $id;
+
     /**
-     * @var TeamCollection
+     * @ORM\Column(type="string")
+     */
+    private $name;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $state;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="AppBundle\Entity\Team")
      */
     private $teams;
 
     /**
-     * @var MatchResultCollection
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\MatchResult", mappedBy="division")
      */
     private $matchResults;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Tournament", inversedBy="divisions")
+     */
+    private $tournament;
 
     /**
      * Division constructor.
      * @param string $name
      */
-    public function __construct(string $name)
+    public function __construct(string $name = '')
     {
-        if ($name !== static::NAME_A && $name !== static::NAME_B) {
-            throw new \InvalidArgumentException("Division name can be A or B");
-        }
-
         $this->name = $name;
         $this->state = static::SATE_PICKING_TEAMS;
-        $this->teams = new TeamCollection([]);
-        $this->matchResults = new MatchResultCollection([]);
+
+        $this->matchResults = new ArrayCollection();
+        $this->teams = new ArrayCollection();
     }
 
     /**
@@ -88,9 +98,9 @@ class Division
     }
 
     /**
-     * @return TeamCollection
+     * @return ArrayCollection
      */
-    public function getTeams(): TeamCollection
+    public function getTeams() : ArrayCollection
     {
         return $this->teams;
     }
@@ -108,9 +118,9 @@ class Division
     }
 
     /**
-     * @param TeamCollection $teams
+     * @param ArrayCollection $teams
      */
-    public function setTeams(TeamCollection $teams)
+    public function setTeams(ArrayCollection $teams)
     {
         if ($this->isTeamsLocked() === true) {
             throw new \LogicException('Teams cannot be set when locked');
@@ -161,8 +171,8 @@ class Division
     }
 
     /**
-     * @param $teams TeamCollection
-     * @return MatchResultCollection
+     * @param $teams Team[]|ArrayCollection
+     * @return MatchResult[]
      */
     private function generateMatchResults($teams)
     {
@@ -174,7 +184,7 @@ class Division
             }
         }
 
-        return new MatchResultCollection($matchResults);
+        return $matchResults;
     }
 
     /**
@@ -188,18 +198,24 @@ class Division
         }
 
         $matchResult->setWinnerTeam($winnerTeam);
-        $unplayedMatchCount = count($this->matchResults->getUnplayedMatches());
+        $unplayedMatchCount = count($this->getUnplayedMatches());
         if ($unplayedMatchCount === 0) {
             $this->state = static::SATE_FINISHED;
         }
     }
 
     /**
-     * @return MatchResultCollection
+     * @return MatchResult[]
      */
     public function getUnplayedMatches()
     {
-        return $this->matchResults->getUnplayedMatches();
+        $unplayedMatches = [];
+        foreach ($this->matchResults as $matchResult) {
+            if ($matchResult->getWinnerTeam() === null) {
+                $unplayedMatches[] = $matchResult;
+            }
+        }
+        return $unplayedMatches;
     }
 
     /**
@@ -208,14 +224,38 @@ class Division
      */
     public function getTeamById($id)
     {
-        return $this->teams->getTeamById($id);
+        $resultTeam = null;
+        foreach ($this->teams as $team) {
+            if ($team->getId() === $id) {
+                $resultTeam = $team;
+                break;
+            }
+        }
+        return $resultTeam;
     }
 
     /**
-     * @return MatchResultCollection
+     * @return MatchResult[]|ArrayCollection
      */
     public function getMatchResults()
     {
         return $this->matchResults;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getTournament()
+    {
+        return $this->tournament;
+    }
+
+    /**
+     * @param mixed $tournament
+     */
+    public function setTournament($tournament)
+    {
+        $this->tournament = $tournament;
+    }
+
 }

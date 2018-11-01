@@ -5,11 +5,10 @@ namespace Tests\AppBundle\Tournament;
 use AppBundle\Entity\Division;
 use AppBundle\Entity\MatchResult;
 use AppBundle\Entity\Team;
-use AppBundle\Tournament\TeamCollection;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use AppBundle\Tournament\TeamSizeTooSmallException;
-use AppBundle\Tournament\MatchResultCollection;
+use Doctrine\Common\Collections\ArrayCollection;
 
 class DivisionTest extends TestCase
 {
@@ -25,7 +24,7 @@ class DivisionTest extends TestCase
             $team->setId($number);
             $teams[] = $team;
         }
-        $teamCollection = new TeamCollection($teams);
+        $teamCollection = new ArrayCollection($teams);
         $division = new Division(Division::NAME_A);
         $division->setTeams($teamCollection);
         return $division;
@@ -73,12 +72,6 @@ class DivisionTest extends TestCase
     {
         $division = new Division(Division::NAME_B);
         $this->assertEquals('B', $division->getName());
-    }
-
-    public function test_invalid_name_throws_exception()
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        new Division('C');
     }
 
     public function test_can_set_and_get_id()
@@ -153,14 +146,6 @@ class DivisionTest extends TestCase
         $this->assertEquals(10, count($division2->getMatchResults()));
     }
 
-    public function test_getMatchResults_returns_correct_type_after_team_lock()
-    {
-        $division = $this->getDivisionWithTeams(4);
-        $division->lockTeams();
-        $matchResults = $division->getMatchResults();
-        $this->assertInstanceOf(MatchResultCollection::class, $matchResults);
-    }
-
     public function test_getMatchResults_starting_values()
     {
         $division = $this->getDivisionWithTeams(4);
@@ -181,9 +166,7 @@ class DivisionTest extends TestCase
             new MatchResult($team3, $team4, null),
         ];
 
-        $expectedMatchResultCollection = new MatchResultCollection($expectedMatchResultsArray);
-
-        $this->assertEquals($expectedMatchResultCollection, $matchResultCollection);
+        $this->assertEquals($expectedMatchResultsArray, $matchResultCollection);
     }
 
     public function test_set_winner()
@@ -213,8 +196,7 @@ class DivisionTest extends TestCase
             $matchResultCollection[5]
         ];
 
-        $expectedMatchResultCollection = new MatchResultCollection($expectedUnplayedMatches);
-        $this->assertEquals($expectedMatchResultCollection, $division->getUnplayedMatches());
+        $this->assertEquals($expectedUnplayedMatches, $division->getUnplayedMatches());
     }
 
     public function test_when_all_winer_teams_are_set_division_state_finished()

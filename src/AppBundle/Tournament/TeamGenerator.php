@@ -13,6 +13,6 @@ class TeamGenerator
             $teams[] = new Team("Team {$number}");
         }
 
-        return new TeamCollection($teams);
+        return $teams;
     }
 }

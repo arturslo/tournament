@@ -27,6 +27,10 @@ class Team
     * @ORM\ManyToMany(targetEntity="AppBundle\Entity\Tournament", mappedBy="teams")
     */
     private $tournaments;
+    /**
+     * @ORM\ManyToMany(targetEntity="AppBundle\Entity\Division", mappedBy="teams")
+     */
+    private $divisions;
 
     /**
      * Team constructor.
@@ -36,6 +40,7 @@ class Team
     {
         $this->name = $name;
         $this->tournaments = new ArrayCollection();
+        $this->divisions = new ArrayCollection();
     }
 
     /**
@@ -96,6 +101,22 @@ class Team
         }
         $this->tournaments->add($tournament);
         $tournament->addTeam($this);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDivisions()
+    {
+        return $this->divisions;
+    }
+
+    /**
+     * @param mixed $divisions
+     */
+    public function setDivisions($divisions)
+    {
+        $this->divisions = $divisions;
     }
 
 }

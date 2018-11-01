@@ -2,28 +2,40 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Entity\Team;
+use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="match_results")
+ */
 class MatchResult
 {
     /**
-     * @var int
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\Column(type="integer")
      */
     private $id;
+
     /**
-     * @var Team
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Division", inversedBy="matchResults")
+     */
+    private $division;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Team")
      */
     private $firstTeam;
     /**
-     * @var Team
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Team")
      */
     private $secondTeam;
     /**
-     * @var Team
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Team")
      */
     private $winnerTeam;
     /**
-     * @var Team
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Team")
      */
     private $loserTeam;
 
@@ -97,6 +109,14 @@ class MatchResult
         } else {
             $this->loserTeam = $this->firstTeam;
         }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDivision()
+    {
+        return $this->division;
     }
 
 }
