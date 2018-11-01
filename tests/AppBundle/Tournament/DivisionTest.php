@@ -7,7 +7,6 @@ use AppBundle\Entity\MatchResult;
 use AppBundle\Entity\Team;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use AppBundle\Tournament\TeamSizeTooSmallException;
 use Doctrine\Common\Collections\ArrayCollection;
 
 class DivisionTest extends TestCase
@@ -36,7 +35,6 @@ class DivisionTest extends TestCase
     public function getDivisionWithMatchResults(): Division
     {
         $division = $this->getDivisionWithTeams(4);
-        $division->lockTeams();
         $matchResultCollection = $division->getMatchResults();
 
         for ($index = 0; $index < count($matchResultCollection); $index++) {
@@ -98,116 +96,18 @@ class DivisionTest extends TestCase
     public function test_default_state_picking_teams()
     {
         $division = new Division(Division::NAME_A);
-        $this->assertEquals(Division::SATE_PICKING_TEAMS, $division->getState());
-    }
-
-    public function test_lock_teams_sets_state_in_progress()
-    {
-        $division = $this->getDivisionWithTeams(4);
-        $division->lockTeams();
         $this->assertEquals(Division::SATE_IN_PROGRESS, $division->getState());
     }
 
-    public function test_canTeamsBeLocked_returns_true_if_team_count_larger_or_equal_than_4()
-    {
-        $division = $this->getDivisionWithTeams(4);
-        $this->assertEquals(true, $division->canTeamsBeLocked());
-    }
-
-    public function test_canTeamsBeLocked_returns_false_if_team_count_smaller_than_4()
+    public function test_getMatchResults_returns_correct_count()
     {
         $division = $this->getDivisionWithTeams(2);
-        $this->assertEquals(false, $division->canTeamsBeLocked());
-    }
-
-    public function test_lock_teams_throws_exception_if_canTeamsBeLocked_returns_false()
-    {
-        $division = $this->getDivisionWithTeams(2);
-        $this->assertEquals(false, $division->canTeamsBeLocked());
-        $this->expectException(TeamSizeTooSmallException::class);
-        $division->lockTeams();
-    }
-
-    public function test_getMatchResults_return_empty_collection_when_state_is_picking_teams()
-    {
-        $division = new Division(Division::NAME_A);
-        $this->assertEquals(Division::SATE_PICKING_TEAMS, $division->getState());
-        $this->assertEquals(1, $this->count($division->getMatchResults()));
-    }
-
-    public function test_getMatchResults_returns_correct_count_after_team_lock()
-    {
-        $division = $this->getDivisionWithTeams(4);
-        $division->lockTeams();
-        $this->assertEquals(6, count($division->getMatchResults()));
-
-        $division2 = $this->getDivisionWithTeams(5);
-        $division2->lockTeams();
-        $this->assertEquals(10, count($division2->getMatchResults()));
-    }
-
-    public function test_getMatchResults_starting_values()
-    {
-        $division = $this->getDivisionWithTeams(4);
-        $division->lockTeams();
-        $matchResultCollection = $division->getMatchResults();
-
-        $team1 = $division->getTeamById(1);
-        $team2 = $division->getTeamById(2);
-        $team3 = $division->getTeamById(3);
-        $team4 = $division->getTeamById(4);
-
-        $expectedMatchResultsArray = [
-            new MatchResult($team1, $team2, null),
-            new MatchResult($team1, $team3, null),
-            new MatchResult($team1, $team4, null),
-            new MatchResult($team2, $team3, null),
-            new MatchResult($team2, $team4, null),
-            new MatchResult($team3, $team4, null),
-        ];
-
-        $this->assertEquals($expectedMatchResultsArray, $matchResultCollection);
-    }
-
-    public function test_set_winner()
-    {
-        $division = $this->getDivisionWithMatchResults();
-        $matchResultCollection = $division->getMatchResults();
-
-        $team1 = $division->getTeamById(1);
-        $division->setWinnerTeam($matchResultCollection[1], $team1);
-
-        $this->assertEquals($team1, $matchResultCollection[1]->getWinnerTeam());
-    }
-
-    public function test_unplayed_matches()
-    {
-        $division = $this->getDivisionWithMatchResults();
-        $matchResultCollection = $division->getMatchResults();
-
-        $team1 = $division->getTeamById(1);
-        $division->setWinnerTeam($matchResultCollection[1], $team1);
-
-        $expectedUnplayedMatches = [
-            $matchResultCollection[0],
-            $matchResultCollection[2],
-            $matchResultCollection[3],
-            $matchResultCollection[4],
-            $matchResultCollection[5]
-        ];
-
-        $this->assertEquals($expectedUnplayedMatches, $division->getUnplayedMatches());
-    }
-
-    public function test_when_all_winer_teams_are_set_division_state_finished()
-    {
-        $division = $this->getDivisionWithMatchResults();
-        $matchResultCollection = $division->getMatchResults();
-        foreach ($matchResultCollection as $matchResult){
-            $division->setWinnerTeam($matchResult, $matchResult->getFirstTeam());
-        }
-
-        $this->assertEquals(Division::SATE_FINISHED, $division->getState());
+        $teams = $division->getTeams();
+        $division->setMatchResults([
+            new MatchResult($teams[0], $teams[1], null),
+            new MatchResult($teams[0], $teams[1], null)
+        ]);
+        $this->assertEquals(2, count($division->getMatchResults()));
     }
 
 }
