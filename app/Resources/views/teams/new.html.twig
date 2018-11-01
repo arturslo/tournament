@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+{% block title %}new team{% endblock %}
+
+{% block body %}
+    {{ form_start(form) }}
+    {{ form_row(form.name) }}
+    <button type="submit" formnovalidate>Save</button>
+    {{ form_end(form) }}
+{% endblock %}

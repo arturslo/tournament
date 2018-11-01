@@ -13,12 +13,6 @@ class TeamTest extends TestCase
         $this->assertEquals('My team', $team->getName());
     }
 
-    public function test_empty_team_name_string_throws_exception()
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        new Team('');
-    }
-
     public function test_can_set_and_get_id()
     {
         $team = new Team("My team");

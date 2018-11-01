@@ -2,15 +2,24 @@
 
 namespace AppBundle\Entity;
 
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="teams")
+ */
 class Team
 {
     /**
-     * @var int
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\Column(type="integer")
      */
     private $id;
     /**
-     * @var string
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank()
      */
     private $name;
 
@@ -18,12 +27,8 @@ class Team
      * Team constructor.
      * @param string $name
      */
-    public function __construct(string $name)
+    public function __construct(string $name = '')
     {
-        if (strlen($name) === 0) {
-            throw new \InvalidArgumentException('Name cannot be empty string!');
-        }
-
         $this->name = $name;
     }
 
@@ -36,9 +41,9 @@ class Team
     }
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getId(): int
+    public function getId()
     {
         return $this->id;
     }
@@ -49,6 +54,14 @@ class Team
     public function setId(int $id)
     {
         $this->id = $id;
+    }
+
+    /**
+     * @param string $name|null
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
     }
 
 }
