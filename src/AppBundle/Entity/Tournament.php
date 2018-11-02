@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Tournament\TeamsAlreadyLockedException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -13,9 +14,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Tournament
 {
     const STATE_PICKING_TEAMS = 1;
-    const STATE_PLAYING_A_B = 2;
-    const STATE_PLAYING_FINALS = 3;
-    const STATE_FINISHED = 4;
+    const STATE_PICKED_TEAMS = 2;
+    const STATE_PLAYING_A_B = 3;
+    const STATE_PLAYING_A = 4;
+    const STATE_PLAYING_B = 5;
+    const STATE_PLAYING_EXCLUSION = 6;
+    const STATE_PLAYING_SEMI_FINAL = 7;
+    const STATE_PLAYING_FINAL = 8;
+    const STATE_FINISHED = 9;
 
     /**
      * @ORM\Id
@@ -76,6 +82,9 @@ class Tournament
      */
     public function setTeams($teams)
     {
+        if ($this->state !== static::STATE_PICKING_TEAMS) {
+            throw new TeamsAlreadyLockedException();
+        }
         $this->teams = $teams;
     }
 
@@ -92,7 +101,7 @@ class Tournament
     }
 
     /**
-     * @return mixed
+     * @return ArrayCollection|Division[]
      */
     public function getDivisions()
     {
@@ -104,6 +113,9 @@ class Tournament
      */
     public function setDivisions($divisions)
     {
+        foreach ($divisions as $division) {
+            $division->setTournament($this);
+        }
         $this->divisions = $divisions;
     }
 
@@ -123,4 +135,20 @@ class Tournament
         $this->state = $state;
     }
 
+    /**
+     * @param string $name
+     * @return Division|null
+     */
+    public function getDivisionByName(string $name)
+    {
+        $foundDivision = null;
+        foreach ($this->divisions as $division) {
+            if ($division->getName() === $name) {
+                $foundDivision = $division;
+                break;
+            }
+        }
+
+        return $foundDivision;
+    }
 }

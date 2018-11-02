@@ -16,9 +16,8 @@ class Division
     const NAME_A = 'A';
     const NAME_B = 'B';
 
-    const SATE_PICKING_TEAMS = 1;
-    const SATE_IN_PROGRESS = 2;
-    const SATE_FINISHED = 3;
+    const SATE_IN_PROGRESS = 1;
+    const SATE_FINISHED = 2;
 
     /**
      * @ORM\Id
@@ -59,7 +58,7 @@ class Division
     public function __construct(string $name = '')
     {
         $this->name = $name;
-        $this->state = static::SATE_PICKING_TEAMS;
+        $this->state = static::SATE_IN_PROGRESS;
 
         $this->matchResults = new ArrayCollection();
         $this->teams = new ArrayCollection();
@@ -98,50 +97,19 @@ class Division
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|Team[]
      */
-    public function getTeams() : ArrayCollection
+    public function getTeams()
     {
         return $this->teams;
     }
 
     /**
-     * @return bool
+     * @param ArrayCollection|Team[] $teams
      */
-    public function isTeamsLocked(): bool
+    public function setTeams($teams)
     {
-        if ($this->state === static::SATE_PICKING_TEAMS) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * @param ArrayCollection $teams
-     */
-    public function setTeams(ArrayCollection $teams)
-    {
-        if ($this->isTeamsLocked() === true) {
-            throw new \LogicException('Teams cannot be set when locked');
-        }
         $this->teams = $teams;
-    }
-
-    /**
-     * @return bool
-     */
-    public function canTeamsBeLocked() : bool
-    {
-        if ($this->isTeamSizeValid() === false) {
-            return false;
-        }
-
-        if ($this->isTeamsLocked() === true) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -154,37 +122,6 @@ class Division
         }
 
         return true;
-    }
-
-    public function lockTeams()
-    {
-        if ($this->isTeamSizeValid() === false) {
-            throw new TeamSizeTooSmallException();
-        }
-
-        if ($this->isTeamsLocked() === true) {
-            throw new TeamsAlreadyLockedException();
-        }
-
-        $this->state = static::SATE_IN_PROGRESS;
-        $this->matchResults = $this->generateMatchResults($this->teams);
-    }
-
-    /**
-     * @param $teams Team[]|ArrayCollection
-     * @return MatchResult[]
-     */
-    private function generateMatchResults($teams)
-    {
-        $teamCount = count($teams);
-        $matchResults = [];
-        for($index = 0; $index < $teamCount - 1; $index++) {
-            for ($index2 = $index + 1; $index2 < $teamCount; $index2++) {
-                $matchResults[] = new MatchResult($teams[$index], $teams[$index2], null);
-            }
-        }
-
-        return $matchResults;
     }
 
     /**
@@ -202,6 +139,26 @@ class Division
         if ($unplayedMatchCount === 0) {
             $this->state = static::SATE_FINISHED;
         }
+    }
+
+    /**
+     * @param Team $team
+     * @return int
+     */
+    public function getTeamScore(Team $team) : int
+    {
+        $teamScore = 0;
+        foreach ($this->matchResults as $matchResult) {
+            $winnerTeam = $matchResult->getWinnerTeam();
+            if ($winnerTeam === null) {
+                continue;
+            }
+            if ($team->getId() === $winnerTeam->getId()) {
+                $teamScore++;
+            }
+        }
+
+        return $teamScore;
     }
 
     /**
@@ -232,6 +189,25 @@ class Division
             }
         }
         return $resultTeam;
+    }
+
+    /**
+     * @param mixed $matchResults
+     */
+    public function setMatchResults($matchResults)
+    {
+        foreach ($matchResults as $matchResult) {
+            $matchResult->setDivision($this);
+        }
+        $this->matchResults = $matchResults;
+    }
+
+    /**
+     * @param mixed $state
+     */
+    public function setState($state)
+    {
+        $this->state = $state;
     }
 
     /**

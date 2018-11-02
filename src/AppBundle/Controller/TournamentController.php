@@ -2,8 +2,11 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Division;
 use AppBundle\Entity\Tournament;
 use AppBundle\Form\TournamentAddTeamsType;
+use AppBundle\Tournament\Tables\DivisionABTable;
+use AppBundle\Tournament\TournamentManager;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
@@ -16,10 +19,10 @@ class TournamentController extends Controller
      */
     public function testAction(Request $request)
     {
-        $tournament = new Tournament();
-        $em = $this->getDoctrine()->getManager();
-        $em->persist($tournament);
-        $em->flush();
+        $tournament = $this->getDoctrine()->getRepository(Tournament::class)->find(1);
+        $table = new DivisionABTable($tournament->getDivisionByName('A'));
+        dump($table);
+        die();
     }
 
     /**
@@ -55,7 +58,19 @@ class TournamentController extends Controller
             throw new NotFoundHttpException();
         }
 
-        return $this->render('tournaments/show.html.twig', ["tournament" => $tournament]);
+        $divisionATable = null;
+        $divisionBTable = null;
+
+        if ($tournament->getState() > Tournament::STATE_PICKED_TEAMS) {
+            $divisionATable = new DivisionABTable($tournament->getDivisionByName(Division::NAME_A));
+            $divisionBTable = new DivisionABTable($tournament->getDivisionByName(Division::NAME_B));
+        }
+
+        return $this->render('tournaments/show.html.twig', [
+            "tournament" => $tournament,
+            "divisionATable" => $divisionATable,
+            "divisionBTable" => $divisionBTable
+        ]);
     }
 
     /**
@@ -75,6 +90,7 @@ class TournamentController extends Controller
         if ($form->isSubmitted() && $form->isValid()) {
 
             $em = $this->getDoctrine()->getManager();
+            $tournament->setState(Tournament::STATE_PICKED_TEAMS);
             $em->persist($tournament);
             $em->flush();
 
@@ -89,8 +105,27 @@ class TournamentController extends Controller
     /**
      * @Route("/tournaments/start/{id}", name="start_tournament")
      */
-    public function startTournamentAction($id)
+    public function startTournamentAction($id, TournamentManager $tournamentManager)
     {
+        $tournament = $this->getDoctrine()->getRepository(Tournament::class)->find($id);
 
+        if (null === $tournament) {
+            throw new NotFoundHttpException();
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $tournamentManager->startTornament($tournament);
+
+        $divisions = $tournament->getDivisions();
+        foreach ($divisions as $division) {
+            foreach ($division->getMatchResults() as $matchResult) {
+                $em->persist($matchResult);
+            }
+            $em->persist($division);
+        }
+
+        $em->persist($tournament);
+        $em->flush();
+        return $this->redirectToRoute('show_tournament', ['id' => $tournament->getId()]);
     }
 }

@@ -119,4 +119,12 @@ class MatchResult
         return $this->division;
     }
 
+    /**
+     * @param mixed $division
+     */
+    public function setDivision($division)
+    {
+        $this->division = $division;
+    }
+
 }

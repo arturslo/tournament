@@ -22,4 +22,13 @@
         </table>
     {% endif %}
 
+    {% if tournament.state == constant('STATE_PICKED_TEAMS', tournament) %}
+        <a href="{{ path('start_tournament', {'id' : tournament.id}) }}">start tournament</a>
+    {% endif %}
+
+    {% if tournament.state > constant('STATE_PICKED_TEAMS', tournament) %}
+        {% include 'tournaments/_division_ab_table.html.twig' with {'divisionABTable': divisionATable} %}
+        {% include 'tournaments/_division_ab_table.html.twig' with {'divisionABTable': divisionBTable} %}
+    {% endif %}
+
 {% endblock %}
